@@ -1,165 +1,167 @@
-# Desafio Backend Formedic
+# Desafio Backend — Formedic API
 
-## 1. Contexto do desafio
+## 🎯 Objetivo
 
-Este repositório implementa um backend enxuto para agenda médica com foco no escopo mínimo:
+Implementar uma API enxuta de agendamento médico que atenda exclusivamente ao escopo solicitado:
 
 - Criar agendamento
-- Listar agendamentos por dia e profissional
+- Listar agendamentos por dia
+- Listar agendamentos por profissional
 - Impedir conflito de horário
 
-Fora de escopo:
+A proposta prioriza simplicidade estrutural, integridade de dados e clareza de responsabilidades, evitando qualquer complexidade que não esteja explicitamente prevista no enunciado.
+
+## 📌 Escopo e Delimitações
+
+### Implementado
+
+- Persistência em PostgreSQL
+- Validação estruturada de entrada
+- Controle de conflito no nível do banco
+- Separação clara entre controller e service
+- Testes unitários focados nas regras críticas
+
+### Fora de escopo (deliberadamente)
 
 - Autenticação e autorização
-- Cancelamento/edição
-- Microserviços, mensageria e observabilidade avançada
+- Cancelamento ou edição de agendamentos
+- Microserviços
+- Observabilidade avançada
+- Tabelas auxiliares para pacientes/profissionais
 
-## 2. Stack escolhida
+Essas decisões foram intencionais para manter o foco no problema principal.
 
-- Node.js + TypeScript (strict)
-- Fastify para HTTP
-- PostgreSQL para persistência
-- Zod para validação
-- Vitest para testes unitários
+## 🧱 Stack Técnica
 
-Justificativa curta: stack simples, madura e suficiente para entregar regra de negócio com estrutura clara sem overengineering.
+| Tecnologia | Papel |
+| ---------- | ----- |
+| Node.js 20+ | Runtime |
+| TypeScript (strict) | Segurança de tipos |
+| Fastify | Camada HTTP performática |
+| PostgreSQL | Persistência relacional |
+| Zod | Validação de schemas |
+| Vitest | Testes unitários |
+| Docker Compose | Ambiente local isolado |
 
-## 3. Como rodar localmente
+Critério de escolha: stack madura, simples e suficiente para resolver o problema sem overengineering.
 
-### Pré-requisitos
+## 🗄 Modelagem de Dados
 
-- Node.js 20+
-- PostgreSQL 16+
-
-### Passos
-
-1. Instalar dependências:
-
-```bash
-npm install
-```
-
-2. Criar arquivo `.env` a partir de `.env.example`.
-
-3. Aplicar migrações:
-
-```bash
-npm run db:migrate
-```
-
-4. Subir API:
-
-```bash
-npm run dev
-```
-
-5. Health check:
-
-```bash
-curl -i http://localhost:3333/health
-```
-
-## 4. Como rodar via Docker (Postgres)
-
-1. Subir banco:
-
-```bash
-docker compose up -d
-```
-
-2. Executar migrações:
-
-```bash
-npm run db:migrate
-```
-
-3. Subir API:
-
-```bash
-npm run dev
-```
-
-## 5. Endpoints
-
-| Método | Rota                                               | Descrição                       |
-| ------ | -------------------------------------------------- | ------------------------------- |
-| GET    | `/health`                                          | Verifica disponibilidade da API |
-| POST   | `/appointments`                                    | Cria agendamento                |
-| GET    | `/appointments?date=YYYY-MM-DD&professionalId=...` | Lista por dia e profissional    |
-
-### Respostas de erro padrão
-
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Validation failed.",
-    "details": {}
-  }
-}
-```
-
-## 6. Exemplos curl
-
-### Criar agendamento
-
-```bash
-curl -X POST http://localhost:3333/appointments \
-  -H "Content-Type: application/json" \
-  -d '{
-    "professionalId": "prof-1",
-    "patientId": "patient-1",
-    "startAt": "2026-03-01T14:00:00.000Z"
-  }'
-```
-
-### Listar agendamentos por dia e profissional
-
-```bash
-curl "http://localhost:3333/appointments?date=2026-03-01&professionalId=prof-1"
-```
-
-## 7. Modelagem SQL
+Optou-se por modelagem mínima, alinhada ao escopo:
 
 ```sql
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
 CREATE TABLE appointments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   professional_id text NOT NULL,
   patient_id text NOT NULL,
   start_at timestamptz NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT appointments_professional_start_at_unique UNIQUE (professional_id, start_at)
+  CONSTRAINT appointments_professional_start_at_unique
+  UNIQUE (professional_id, start_at)
 );
-
-CREATE INDEX appointments_start_at_idx ON appointments (start_at);
 ```
 
-## 8. Regras de negócio
+### Decisões importantes
 
-1. `startAt` deve estar no futuro.
-2. `startAt` só aceita minutos `00` ou `30`.
-3. Timezone padrão em UTC.
-4. Conflito garantido no banco por `UNIQUE (professional_id, start_at)`.
-5. Listagem filtra por `date` e `professionalId` e ordena por `startAt` asc.
+- `timestamptz` armazenado em UTC
+- Não foram criadas tabelas de pacientes/profissionais
+- Conflito resolvido via `UNIQUE (professional_id, start_at)`
+- Índice adicional em `start_at` para listagem eficiente
 
-## 9. Decisões técnicas e trade-offs
+Essa abordagem delega concorrência ao banco, eliminando race conditions na aplicação.
 
-- `patient_id` foi escolhido ao invés de `patient_name` para manter identificador estável.
-- Não foram criadas tabelas de pacientes/profissionais neste escopo mínimo.
-- A regra de conflito não depende de lock em aplicação; o banco resolve concorrência com constraint.
-- Service concentra regras; controller apenas orquestra entrada/saída.
+## ⚙️ Regras de Negócio
 
-## 10. Como rodar testes
+As regras são concentradas no service:
+
+- `startAt` deve estar no futuro
+- Minutos permitidos: apenas `00` ou `30`
+- Timezone padrão UTC
+- Conflito garantido via constraint no banco
+- Listagem por intervalo de dia (UTC)
+- Ordenação crescente por horário
+
+Validações de formato e estrutura são feitas previamente com Zod.
+
+## 🔄 Fluxo Interno
+
+```text
+HTTP (Fastify)
+   ↓
+Controller
+   ↓
+Service (regras de negócio)
+   ↓
+Database (PostgreSQL)
+```
+
+- Controller: orquestra entrada e saída
+- Service: concentra lógica
+- Banco: garante integridade estrutural
+
+A arquitetura é propositalmente simples para respeitar o escopo.
+
+## 🚀 Endpoints
+
+| Método | Rota | Descrição |
+| ------ | ---- | --------- |
+| GET | `/health` | Health check |
+| POST | `/appointments` | Criar agendamento |
+| GET | `/appointments?date=YYYY-MM-DD&professionalId=...` | Listar por dia |
+
+## 🧪 Testes
+
+Testes unitários no service validam:
+
+- Criação com sucesso
+- Bloqueio de data no passado
+- Bloqueio de minuto inválido
+- Bloqueio de conflito
+
+O foco foi validar as regras críticas de negócio, não infraestrutura.
+
+## ⚖️ Decisões e Trade-offs
+
+### Por que não criar tabela de pacientes/profissionais?
+
+O desafio não exige CRUD desses recursos. Criá-los adicionaria complexidade desnecessária.
+
+### Por que não verificar conflito antes de inserir?
+
+Porque validação prévia não elimina race condition sob concorrência.
+A constraint no banco é a fonte de verdade.
+
+### Por que não usar Clean Architecture completa?
+
+O escopo não demanda múltiplos bancos, múltiplas integrações ou substituições de infraestrutura.
+Introduzir camadas adicionais aumentaria complexidade sem ganho proporcional.
+
+## 🐳 Execução
+
+### Local
 
 ```bash
-npm run test
+npm install
+npm run db:migrate
+npm run dev
 ```
 
-Cobertura mínima de regra de negócio no service:
+### Com Docker
 
-- should create appointment
-- should reject appointment in the past
-- should reject invalid minute slot
-- should reject conflict for same professional and startAt
+```bash
+docker compose up -d
+npm run db:migrate
+npm run dev
+```
+
+## 🧠 Considerações Finais
+
+Esta implementação foi construída com foco em:
+
+- Respeitar rigorosamente o escopo
+- Garantir integridade sob concorrência
+- Demonstrar clareza na separação de responsabilidades
+- Evitar complexidade não solicitada
+- Priorizar robustez com simplicidade
+
+A solução busca equilíbrio entre pragmatismo e qualidade técnica.
