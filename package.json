@@ -1,0 +1,39 @@
+{
+  "name": "desafio-backend-agenda",
+  "version": "1.0.0",
+  "description": "Backend de agenda com escopo minimo para desafio tecnico.",
+  "main": "dist/src/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/server.js",
+    "test": "vitest run",
+    "lint": "tsc --noEmit -p tsconfig.json",
+    "db:migrate": "tsx src/db/run-migrations.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paesnichollas/desafio-backend-agenda.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/paesnichollas/desafio-backend-agenda/issues"
+  },
+  "homepage": "https://github.com/paesnichollas/desafio-backend-agenda#readme",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "fastify": "^5.7.4",
+    "pg": "^8.18.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "@types/pg": "^8.15.6",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
