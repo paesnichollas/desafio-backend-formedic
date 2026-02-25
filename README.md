@@ -33,15 +33,15 @@ Essas decisões foram intencionais para manter o foco no problema principal.
 
 ## 🧱 Stack Técnica
 
-| Tecnologia | Papel |
-| ---------- | ----- |
-| Node.js 20+ | Runtime |
-| TypeScript (strict) | Segurança de tipos |
-| Fastify | Camada HTTP performática |
-| PostgreSQL | Persistência relacional |
-| Zod | Validação de schemas |
-| Vitest | Testes unitários |
-| Docker Compose | Ambiente local isolado |
+| Tecnologia          | Papel                    |
+| ------------------- | ------------------------ |
+| Node.js 20+         | Runtime                  |
+| TypeScript (strict) | Segurança de tipos       |
+| Fastify             | Camada HTTP performática |
+| PostgreSQL          | Persistência relacional  |
+| Zod                 | Validação de schemas     |
+| Vitest              | Testes unitários         |
+| Docker Compose      | Ambiente local isolado   |
 
 Critério de escolha: stack madura, simples e suficiente para resolver o problema sem overengineering.
 
@@ -103,11 +103,11 @@ A arquitetura é propositalmente simples para respeitar o escopo.
 
 ## 🚀 Endpoints
 
-| Método | Rota | Descrição |
-| ------ | ---- | --------- |
-| GET | `/health` | Health check |
-| POST | `/appointments` | Criar agendamento |
-| GET | `/appointments?date=YYYY-MM-DD&professionalId=...` | Listar por dia |
+| Método | Rota                                               | Descrição         |
+| ------ | -------------------------------------------------- | ----------------- |
+| GET    | `/health`                                          | Health check      |
+| POST   | `/appointments`                                    | Criar agendamento |
+| GET    | `/appointments?date=YYYY-MM-DD&professionalId=...` | Listar por dia    |
 
 ## 🧪 Testes
 
@@ -153,6 +153,18 @@ docker compose up -d
 npm run db:migrate
 npm run dev
 ```
+
+## Uso de IA no Workflow
+
+Durante o desenvolvimento, utilizei a IA Codex como ferramenta de apoio para acelerar tarefas operacionais, principalmente na geração de estruturas repetitivas.
+
+O uso foi focado em:
+
+- Auxiliar na criação de schemas e tipagens no TypeScript
+- Sugerir ajustes de nomenclatura para manter coerência entre controller, service e banco
+- Revisar rapidamente trechos de validação, como regra de slot (`00` e `30`) e tratamento de conflito
+
+As decisões arquiteturais, definição de regras de negócio e escolha dos trade-offs foram conduzidas manualmente, com a IA atuando apenas como apoio produtivo, não como fonte de decisão técnica.
 
 ## 🧠 Considerações Finais
 
